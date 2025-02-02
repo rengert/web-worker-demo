@@ -1,59 +1,71 @@
 # WebWorkerDemo
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.5.
+and demonstrates how to use Web Workers in an Angular application.
+To simplify the usage the package [Angular Web Worker](https://www.npmjs.com/package/@wbds/angular-web-worker) is used
 
 ## Development server
 
 To start a local development server, run:
 
 ```bash
-ng serve
+  ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will
+automatically reload whenever you modify any of the source files.
 
-## Code scaffolding
+## Simple setup
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Install the package
 
 ```bash
-ng generate component component-name
+  npm i @wbds/angular-web-worker --save
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+At least the RC version should be used, because the stable version does not support Angular 19.
 
-```bash
-ng generate --help
+### Config file
+
+Create a type script config file and reference is it in the `angular.json` file.
+
+```
+"webWorkerTsConfig": "tsconfig.worker.json",
 ```
 
-## Building
+In my case it is simple
 
-To build the project run:
-
-```bash
-ng build
+```json
+{
+  "extends": "tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/worker",
+    "lib": [
+      "es2018",
+      "webworker"
+    ],
+    "types": []
+  },
+  "include": [
+    "src/**/*.worker.ts"
+  ]
+}
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+### Create a worker
 
-## Running unit tests
+Create a worker file in the `src` folder. In my case it is `src/app/app-worker.worker.ts`
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+### Register the module
 
-```bash
-ng test
+```typescript
+ importProvidersFrom(
+    WorkerModule.forWorkers([
+        {
+            worker: AppWorker,
+            initFn: () => new Worker(new URL('./app.worker.ts', import.meta.url), {type: 'module'}),
+        },
+    ])
+)  
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
