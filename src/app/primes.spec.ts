@@ -7,10 +7,10 @@ describe('countPrimes', () => {
     expect(countPrimes(100_000)).toBe(9592);
   });
 
-  it('reports progress up to 99 percent', () => {
+  it('reports progress from 0 to 100 percent', () => {
     const progress: number[] = [];
     countPrimes(1000, p => progress.push(p));
     expect(progress[0]).toBe(0);
-    expect(progress.at(-1)).toBe(99);
+    expect(progress.at(-1)).toBe(100);
   });
 });

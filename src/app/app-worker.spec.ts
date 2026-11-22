@@ -29,7 +29,7 @@ describe('AppWorker', () => {
     const subscription = progress$.subscribe(v => values.push(v));
     await client.call(w => w.countPrimesWithProgress(1000));
     subscription.unsubscribe();
-    expect(values.at(-1)).toBe(99);
+    expect(values.at(-1)).toBe(100);
   });
 
   it('rejects call() when the worker method throws', async () => {

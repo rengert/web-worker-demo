@@ -17,5 +17,6 @@ export function countPrimes(limit: number, onProgress?: (percent: number) => voi
       onProgress(percent);
     }
   }
+  onProgress?.(100);
   return count;
 }

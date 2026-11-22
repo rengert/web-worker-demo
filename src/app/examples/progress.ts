@@ -30,7 +30,6 @@ export default class Progress {
     subscription.unsubscribe();
     // Also releases the subscription inside the worker.
     await this.client.unsubscribe(progress$);
-    this.progress.set(100);
     this.result.set(`${primes} primes below ${LIMIT.toLocaleString()}.`);
     this.busy.set(false);
   }
