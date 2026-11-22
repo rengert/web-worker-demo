@@ -1,13 +1,14 @@
-import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { routes } from './app.routes';
+import { ApplicationConfig, importProvidersFrom, provideZonelessChangeDetection } from '@angular/core';
+import { provideRouter, withHashLocation } from '@angular/router';
 import { WorkerModule } from '@wbds/angular-web-worker';
-import { AppWorker } from './app.worker';
+import { AppWorker } from './app-worker';
+import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes),
+    provideZonelessChangeDetection(),
+    // Hash routing keeps deep links working on GitHub Pages.
+    provideRouter(routes, withHashLocation()),
     importProvidersFrom(
       WorkerModule.forWorkers([
         {

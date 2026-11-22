@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      angular:
+        patterns: ['@angular/*', '@angular-devkit/*', 'angular-eslint', 'typescript']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
