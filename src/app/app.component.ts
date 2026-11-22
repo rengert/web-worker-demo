@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { WorkerClient, WorkerManager } from '@wbds/angular-web-worker';
 import { AppWorker } from './app.worker';
@@ -7,6 +7,7 @@ import { AppWorker } from './app.worker';
   selector: 'app-root',
   imports: [RouterOutlet],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
