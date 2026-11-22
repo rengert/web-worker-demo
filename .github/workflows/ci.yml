@@ -22,7 +22,7 @@ jobs:
       - run: npm run format:check
       - run: npm test -- --watch=false
       - run: npm run build -- --base-href /${{ github.event.repository.name }}/
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         if: github.event_name == 'push'
         with:
           path: dist/web-worker-demo/browser
