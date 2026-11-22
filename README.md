@@ -1,71 +1,132 @@
-# WebWorkerDemo
+# Angular Web Worker demo
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.5.
-and demonstrates how to use Web Workers in an Angular application.
-To simplify the usage the package [Angular Web Worker](https://www.npmjs.com/package/@wbds/angular-web-worker) is used
+Runnable examples for [`@wbds/angular-web-worker`](https://www.npmjs.com/package/@wbds/angular-web-worker), a library that lets an Angular app talk to a Web Worker like a normal TypeScript class.
 
-## Development server
+**Live demo:** https://rengert.github.io/web-worker-demo/
 
-To start a local development server, run:
+Built with Angular 22 (zoneless, standalone, signals) and `@wbds/angular-web-worker` 22.
+
+## Examples
+
+Each example is one route and one file in [`src/app/examples`](src/app/examples). All of them use the same worker, [`src/app/app-worker.ts`](src/app/app-worker.ts).
+
+| Example                                          | Shows                                                     | Library feature                           |
+| ------------------------------------------------ | --------------------------------------------------------- | ----------------------------------------- |
+| [Heavy work](src/app/examples/heavy-work.ts)     | The same CPU-heavy job on the main thread and in a worker | `@Callable()`, `client.call()`            |
+| [Parallel workers](src/app/examples/parallel.ts) | Four workers at once vs. four jobs in one worker          | one `WorkerClient` per worker             |
+| [Progress events](src/app/examples/progress.ts)  | A progress bar fed by the worker                          | `@Subscribable()`, `client.observe()`     |
+| [Worker state](src/app/examples/state.ts)        | Reading and writing a value that lives in the worker      | `@Accessable()`, `client.get()` / `set()` |
+| [Error handling](src/app/examples/errors.ts)     | An exception in the worker rejects the call in the app    | error serialization                       |
+| [In-app fallback](src/app/examples/fallback.ts)  | The same worker class running without a worker            | `createClient(AppWorker, true)`           |
+
+## Run it locally
+
+Requires Node.js 22.22.3 or later (see [`.nvmrc`](.nvmrc)).
 
 ```bash
-  ng serve
+npm ci
+npm start        # http://localhost:4200
+npm test -- --watch=false
+npm run lint
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will
-automatically reload whenever you modify any of the source files.
+## Using the library in your own app
 
-## Simple setup
-
-### Install the package
+### 1. Install
 
 ```bash
-  npm i @wbds/angular-web-worker --save
+npm i @wbds/angular-web-worker reflect-metadata
 ```
 
-At least the RC version should be used, because the stable version does not support Angular 19.
+Use the library version with the same major as your Angular version.
 
-### Config file
+### 2. Add a TypeScript config for workers
 
-Create a type script config file and reference is it in the `angular.json` file.
-
-```
-"webWorkerTsConfig": "tsconfig.worker.json",
-```
-
-In my case it is simple
+Create `tsconfig.worker.json`:
 
 ```json
 {
-  "extends": "tsconfig.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../out-tsc/worker",
-    "lib": [
-      "es2018",
-      "webworker"
-    ],
+    "outDir": "./out-tsc/worker",
+    "lib": ["es2022", "webworker"],
     "types": []
   },
-  "include": [
-    "src/**/*.worker.ts"
-  ]
+  "include": ["src/**/*.worker.ts"]
 }
 ```
 
-### Create a worker
+and reference it in `angular.json` under `projects.<name>.architect.build.options`:
 
-Create a worker file in the `src` folder. In my case it is `src/app/app-worker.worker.ts`
-
-### Register the module
-
-```typescript
- importProvidersFrom(
-    WorkerModule.forWorkers([
-        {
-            worker: AppWorker,
-            initFn: () => new Worker(new URL('./app.worker.ts', import.meta.url), {type: 'module'}),
-        },
-    ])
-)  
+```json
+"webWorkerTsConfig": "tsconfig.worker.json"
 ```
 
+### 3. Write the worker
+
+Keep the class and the worker entry point in separate files. The app imports the class; only the entry point calls `bootstrapWorker()`.
+
+```typescript
+// app-worker.ts
+import { AngularWebWorker, Callable, OnWorkerInit } from '@wbds/angular-web-worker/web-worker';
+
+@AngularWebWorker()
+export class AppWorker implements OnWorkerInit {
+  onWorkerInit(): void {
+    // initialise state here, not in the constructor
+  }
+
+  @Callable()
+  doSomeWork(value: string): string {
+    return value.toUpperCase();
+  }
+}
+```
+
+```typescript
+// app.worker.ts
+/// <reference lib="webworker" />
+import { bootstrapWorker } from '@wbds/angular-web-worker/web-worker';
+import { AppWorker } from './app-worker';
+
+bootstrapWorker(AppWorker);
+```
+
+Worker code must not import from `@angular/core`, directly or indirectly.
+
+### 4. Register the worker
+
+```typescript
+// app.config.ts
+importProvidersFrom(
+  WorkerModule.forWorkers([
+    {
+      worker: AppWorker,
+      initFn: () => new Worker(new URL('./app.worker.ts', import.meta.url), { type: 'module' }),
+    },
+  ])
+);
+```
+
+The `new URL('./app.worker.ts', import.meta.url)` form is required so the Angular build creates a separate worker bundle.
+
+### 5. Call it
+
+[`src/app/worker-client.ts`](src/app/worker-client.ts) wraps client creation: it falls back to in-app mode when the browser has no Worker support and destroys the worker with the component.
+
+```typescript
+export class MyComponent {
+  private readonly client = injectAppWorker();
+
+  async run() {
+    await this.client.connect();
+    const result = await this.client.call(w => w.doSomeWork('hello'));
+  }
+}
+```
+
+For the full API see the [library README](https://github.com/weisenburger-bau-GmbH/angular-web-worker#readme).
+
+## Testing
+
+[`src/app/app-worker.spec.ts`](src/app/app-worker.spec.ts) tests the worker class through an in-app `WorkerClient`, so no real worker is needed. Tests run with Vitest via `ng test`.

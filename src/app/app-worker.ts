@@ -1,4 +1,10 @@
-import { Accessable, AngularWebWorker, Callable, OnWorkerInit, Subscribable } from '@wbds/angular-web-worker/web-worker';
+import {
+  Accessable,
+  AngularWebWorker,
+  Callable,
+  OnWorkerInit,
+  Subscribable,
+} from '@wbds/angular-web-worker/web-worker';
 import { Subject } from 'rxjs';
 import { countPrimes } from './primes';
 

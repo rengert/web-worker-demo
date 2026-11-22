@@ -4,7 +4,10 @@ import { injectAppWorker } from '../worker-client';
 @Component({
   template: `
     <h2>Error handling</h2>
-    <p>An error thrown in a <code>&#64;Callable()</code> method rejects the promise returned by <code>client.call()</code>.</p>
+    <p>
+      An error thrown in a <code>&#64;Callable()</code> method rejects the promise returned by
+      <code>client.call()</code>.
+    </p>
     <button (click)="run()">Throw in worker</button>
     <p>{{ result() }}</p>
   `,
